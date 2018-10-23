@@ -1,0 +1,16 @@
+sd2/external/*
+.vs/*
+*.db
+*.opendb
+*.tlog
+*.pdb
+*.obj
+*CMakeFiles*
+*CMakeCache*
+Win32/*
+*cmake_install*
+*vcxproj*
+*.sln
+*.log
+*.idb
+*.exe

@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.9)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "C:/sd2")
+set(CMAKE_LIBRARY_OUTPUT_DIRECOTRY "C:/sd2")
+include_directories("C:/sd2/visual_studio/projects/sd2/sd2/include")
+include_directories("C:/sd2/visual_studio/projects/sd2/sd2/external")
+add_executable(bin_test "main.cc")
+target_link_libraries(bin_test libsd2_util)
+install(TARGETS bin_test DESTINATION "C:/sd2/")

@@ -1,0 +1,1 @@
+c:\sd2\Debug\bin_test.exe
