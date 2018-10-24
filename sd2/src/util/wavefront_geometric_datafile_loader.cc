@@ -60,7 +60,8 @@ WavefrontGeometricDataFileLoader::WavefrontGeometricDataFileLoader() :
   {kMaterialName, std::bind(&WavefrontGeometricDataFileLoader::HandleMaterialName, this)},
   {kGroupName, std::bind(&WavefrontGeometricDataFileLoader::HandleGroupName, this)},
   {kSmoothingGroup, std::bind(&WavefrontGeometricDataFileLoader::HandleSmoothingGroup, this)},
-  {kUnknown, std::bind(&WavefrontGeometricDataFileLoader::HandleUnknown, this)}}),
+  {kUnknown, std::bind(&WavefrontGeometricDataFileLoader::HandleUnknown, this)},
+  {kBlankLine, std::bind(&WavefrontGeometricDataFileLoader::HandleBlankLine, this)}}),
  kVertexIndexRegex_(kVertexIndexRegex),
  kVertexIndexTextureCoordinateRegex_(kVertexIndexTextureCoordinateRegex),
  kVertexIndexTextureCoordinateNormalIndexRegex_(kVertexIndexTextureCoordinateNormalIndexRegex),
@@ -78,7 +79,8 @@ WavefrontGeometricDataFileLoader::WavefrontGeometricDataFileLoader() :
   {"mtllib", kExternalMaterialFileName},
   {"usemtl", kMaterialName},
   {"g", kGroupName},
-  {"s", kSmoothingGroup}}),
+  {"s", kSmoothingGroup},
+  {"", kBlankLine}}),
  kAcceptablePolygonFaceElementFormatVector_({
   {kVertexIndexRegex_, FaceElementFormat::kVertexIndices},
   {kVertexIndexTextureCoordinateRegex_, FaceElementFormat::kVertexIndicesTextureCoordinates},
@@ -101,9 +103,6 @@ FileLoadResult WavefrontGeometricDataFileLoader::LoadDataFromFile(const char* fi
   #ifdef DEBUG_
   int line_count = 0;
   #endif
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
   while (!feof(data_file_)) {
     // Read the first word from the current line of the data file. This should indicate what type of information the line provides, which dicates how we will process the line.
     // TODO: Check if the line is longer than max allowed. Try using strnlen_s.
@@ -123,12 +122,13 @@ FileLoadResult WavefrontGeometricDataFileLoader::LoadDataFromFile(const char* fi
         return last_line_load_result;
       }
       line_from_file[0] = '\0';
+    } else {
+    #ifdef DEBUG_
+      std::cerr << "Load failed because handler could not be found. Line (" << line_count << ") load failed on is '" << line_from_file << "'\n'";
+    #endif // DEBUG_
+
     }
   }
-
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
 
   return FileLoadResult::kLoadOk;
 
@@ -136,44 +136,23 @@ FileLoadResult WavefrontGeometricDataFileLoader::LoadDataFromFile(const char* fi
 
 LineType WavefrontGeometricDataFileLoader::GetLineType(const char* input_line) const {
 
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
-
   std::map<const char*, LineType>::const_iterator line_type_iterator = kLineTypeMap_.find(input_line);
 
   if (line_type_iterator == kLineTypeMap_.cend())
     return LineType::kUnknown;
   else
-#ifdef TRACE_
-    {TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
     return line_type_iterator->second;
-    #ifdef TRACE_
-    }
-    #endif
 
 }
 
 FaceElementFormat WavefrontGeometricDataFileLoader::GetFaceElementType(const char* input_line) const {
 
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
-
   FaceElementFormat result = FaceElementFormat::kUnrecognized;
   char eval_string[kMaxInputDataFileLineLength];
 
-  #ifdef TRACE_
-    TRACE_FILE_FUNCT_AND_LINE
-  #endif // TRACE_
-
   CleanFaceElementInput(eval_string, input_line);
 
-  #ifdef TRACE_
-    TRACE_FILE_FUNCT_AND_LINE
-  #endif //TRACE_
-  
+  // Search for an acceptable polygon face element format that matches the format of the string input_line
   for (auto format_regex_pair : kAcceptablePolygonFaceElementFormatVector_) {
     if (std::regex_match(eval_string, format_regex_pair.first)) {
       result = format_regex_pair.second;
@@ -181,52 +160,29 @@ FaceElementFormat WavefrontGeometricDataFileLoader::GetFaceElementType(const cha
     }
   }
 
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
-
   return result;
 
 }
 
 FileLoadResult WavefrontGeometricDataFileLoader::HandleName() {
 
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
-  
   if (fgets(file_data_.name, kMaxNameLength - 1, data_file_))
     return FileLoadResult::kLoadOk;
   else
     return FileLoadResult::kLoadFailed;
-
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
 }
+
 FileLoadResult WavefrontGeometricDataFileLoader::HandleComment() {
 
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
-  
   char file_line[kMaxInputDataFileLineLength];
   
   fgets(file_line, kMaxInputDataFileLineLength, data_file_);
 
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
-  
   return FileLoadResult::kLoadOk;
 
 }
 FileLoadResult WavefrontGeometricDataFileLoader::HandleListOfGeometricVertices() {
   
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
-
   glm::vec4 vertices(glm::vec3(kValueNotProvided), 1.0f);
   FileLoadResult load_result = FileLoadResult::kLoadOk;
   
@@ -235,18 +191,10 @@ FileLoadResult WavefrontGeometricDataFileLoader::HandleListOfGeometricVertices()
   else
     load_result = FileLoadResult::kLoadFailed;
 
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
-
   return load_result;
 
 }
 FileLoadResult WavefrontGeometricDataFileLoader::HandleListOfTextureCoordinates() {
-
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
 
   glm::vec3 vertices(glm::vec2(kValueNotProvided), 0.0f);
   FileLoadResult load_result = FileLoadResult::kLoadOk;
@@ -256,17 +204,11 @@ FileLoadResult WavefrontGeometricDataFileLoader::HandleListOfTextureCoordinates(
   else
     load_result = FileLoadResult::kLoadFailed;
 
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
-
   return load_result;
 
 }
 FileLoadResult WavefrontGeometricDataFileLoader::HandleListOfVertexNormals() {
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
+
   glm::vec3 vertices(kValueNotProvided);
   FileLoadResult load_result = FileLoadResult::kLoadOk;
 
@@ -274,17 +216,11 @@ FileLoadResult WavefrontGeometricDataFileLoader::HandleListOfVertexNormals() {
     file_data_.vertex_normals.push_back(vertices);
   else
     load_result = FileLoadResult::kLoadFailed;
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
+
   return load_result;
 
 }
 FileLoadResult WavefrontGeometricDataFileLoader::HandleParameterSpaceVertices() {
-
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
 
   glm::vec3 vertices(kValueNotProvided);
   FileLoadResult load_result = FileLoadResult::kLoadOk;
@@ -294,19 +230,11 @@ FileLoadResult WavefrontGeometricDataFileLoader::HandleParameterSpaceVertices() 
   else
     load_result = FileLoadResult::kLoadFailed;
 
-#ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-#endif // TRACE_
-    
   return load_result;
 
 }
 FileLoadResult WavefrontGeometricDataFileLoader::HandlePolygonalFaceElements() {
   
-  #ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-  #endif // TRACE_
-
   FileLoadResult load_result = FileLoadResult::kLoadOk;
   std::vector<glm::vec3> polygon_face_element_list;
   glm::vec3 vertices(kValueNotProvided);
@@ -358,10 +286,6 @@ FileLoadResult WavefrontGeometricDataFileLoader::HandlePolygonalFaceElements() {
   else
     load_result = FileLoadResult::kLoadFailed;
   
-  #ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-  #endif // TRACE_
-
   return load_result;
 
 }
@@ -369,9 +293,7 @@ FileLoadResult WavefrontGeometricDataFileLoader::HandleLineElement() {
   return FileLoadResult::kLoadOk;
 }
 FileLoadResult WavefrontGeometricDataFileLoader::HandleExternalMaterialFileName() {
-  #ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-  #endif // TRACE_
+
   FileLoadResult load_result = FileLoadResult::kLoadOk;
   char file_name[kMaxInputDataFileLineLength];
   
@@ -380,17 +302,11 @@ FileLoadResult WavefrontGeometricDataFileLoader::HandleExternalMaterialFileName(
   else 
     load_result = FileLoadResult::kLoadFailed;
   
-  #ifdef TRACE_
-  TRACE_FILE_FUNCT_AND_LINE
-  #endif // TRACE_
-  
   return load_result;
 
 }
 FileLoadResult WavefrontGeometricDataFileLoader::HandleMaterialName() {
-  #ifdef TRACE_
-    TRACE_FILE_FUNCT_AND_LINE
-  #endif // TRACE_
+
   FileLoadResult load_result = FileLoadResult::kLoadOk;
   char material_name[kMaxInputDataFileLineLength];
 
@@ -399,19 +315,13 @@ FileLoadResult WavefrontGeometricDataFileLoader::HandleMaterialName() {
   else
     load_result = FileLoadResult::kLoadFailed;
 
-  #ifdef TRACE_
-    TRACE_FILE_FUNCT_AND_LINE
-  #endif // TRACE_
-
   return load_result;
 }
 FileLoadResult WavefrontGeometricDataFileLoader::HandleGroupName() {
   return FileLoadResult::kLoadOk;
 }
 FileLoadResult WavefrontGeometricDataFileLoader::HandleSmoothingGroup() {
-  #ifdef TRACE_
-    TRACE_FILE_FUNCT_AND_LINE
-  #endif // TRACE_
+  
   FileLoadResult load_result = FileLoadResult::kLoadOk;
   char smooth_group[kMaxInputDataFileLineLength];
 
@@ -420,14 +330,19 @@ FileLoadResult WavefrontGeometricDataFileLoader::HandleSmoothingGroup() {
   else
     load_result = FileLoadResult::kLoadFailed;
 
-  #ifdef TRACE_
-    TRACE_FILE_FUNCT_AND_LINE
-  #endif // TRACE_
-
   return load_result;
 }
 FileLoadResult WavefrontGeometricDataFileLoader::HandleUnknown() {
-  //return FileLoadResult::kLoadFailedRefusedToHandleUnknownInput;
-  return FileLoadResult::kLoadOk;
+  return FileLoadResult::kLoadFailedRefusedToHandleUnknownInput;
 }
 
+FileLoadResult WavefrontGeometricDataFileLoader::HandleBlankLine() {
+  char blank_line[kMaxInputDataFileLineLength];
+
+  fgets(blank_line, kMaxInputDataFileLineLength, data_file_);
+#ifdef DEBUG_
+  std::cout << "Ignoring blank line.\n";
+#endif // DEBUG_
+
+  return FileLoadResult::kLoadOk;
+}

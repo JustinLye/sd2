@@ -34,7 +34,8 @@ enum LineType : unsigned int {
   kMaterialName,
   kGroupName,
   kSmoothingGroup,
-  kUnknown
+  kUnknown,
+  kBlankLine
 };
 
 enum FaceElementFormat : unsigned int {
@@ -46,7 +47,7 @@ enum FaceElementFormat : unsigned int {
 };
 
 struct compare_const_char_ptr {
-  bool operator()(const char const* lhs, const char const* rhs) const {
+  bool operator()(const char* lhs, const char* rhs) const {
     return strcmp(lhs, rhs) < 0;
   }
 };
@@ -68,32 +69,17 @@ class WavefrontGeometricDataFileLoader : public GeometricDataFileLoader {
 
   void CleanFaceElementInput(char* output_string, const char* input_string) const {
     //TODO: Need to add some sanity checks when getting the character count, making copies, etc.
-    #ifdef TRACE_
-      TRACE_FILE_FUNCT_AND_LINE
-      std::cout << "Max length " << kMaxInputDataFileLineLength - 1 << '\n';
-    #endif
     int last_char_pos = strnlen_s(input_string, kMaxInputDataFileLineLength);
-    #ifdef TRACE_
-      TRACE_FILE_FUNCT_AND_LINE
-    #endif //TRACE_
     if (input_string[last_char_pos] == '\n')
       --last_char_pos;
-    #ifdef TRACE_
-      TRACE_FILE_FUNCT_AND_LINE
-      std::cout << "Last char pos " << last_char_pos << '\n';
-    #endif //TRACE_
     #ifdef DEBUG_
       if (kMaxInputDataFileLineLength - 1 < last_char_pos) {
         std::cout << "last char pos " << last_char_pos << " > Max line input " << kMaxInputDataFileLineLength - 1 << '\n';
         last_char_pos = kMaxInputDataFileLineLength - 2;
       }
-      std::cout << "input line is '" << input_string << "'\n"; 
-      
+      std::cout << "input line is '" << input_string << "'\n";      
     #endif // DEBUG_
     strncpy_s(output_string, kMaxInputDataFileLineLength - 1, input_string, last_char_pos);
-    #ifdef TRACE_
-      TRACE_FILE_FUNCT_AND_LINE
-    #endif //TRACE_
  
   }
 
@@ -111,6 +97,7 @@ class WavefrontGeometricDataFileLoader : public GeometricDataFileLoader {
   FileLoadResult HandleGroupName();
   FileLoadResult HandleSmoothingGroup();
   FileLoadResult HandleUnknown();
+  FileLoadResult HandleBlankLine();
 
 
   FILE* data_file_;

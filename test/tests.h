@@ -80,35 +80,35 @@ int object_loader(int argc, char* argv[])
   {
     const GeometricFileData& file_data = wave_file.file_data();
 	  std::cout << "Object name: " << file_data.name << '\n';
-	  for (int i = 0; i < file_data.geometric_vertices.size(); ++i)
+	  for (unsigned int i = 0; i < file_data.geometric_vertices.size(); ++i)
 	  {
 		  std::cout << "(" << file_data.geometric_vertices[i].x << ", "
 				    << file_data.geometric_vertices[i].y << ", "
 				    << file_data.geometric_vertices[i].z << ", "
 				    << file_data.geometric_vertices[i].w << ")\n";
 	  }
-	  for (int i = 0; i < file_data.texture_coordinates.size(); ++i)
+	  for (unsigned int i = 0; i < file_data.texture_coordinates.size(); ++i)
 	  {
 		  std::cout << "(" << file_data.texture_coordinates[i].x << ", "
 			  << file_data.texture_coordinates[i].y << ", "
 			  << file_data.texture_coordinates[i].z << ")\n";
 	  }
-	  for (int i = 0; i < file_data.vertex_normals.size(); ++i)
+	  for (unsigned int i = 0; i < file_data.vertex_normals.size(); ++i)
 	  {
 		  std::cout << "(" << file_data.vertex_normals[i].x << ", "
 			  << file_data.vertex_normals[i].y << ", "
 			  << file_data.vertex_normals[i].z << ")\n";
 	  }
-	  for (int i = 0; i < file_data.parameter_space_vertices.size(); ++i)
+	  for (unsigned int i = 0; i < file_data.parameter_space_vertices.size(); ++i)
 	  {
 		  std::cout << "(" << file_data.parameter_space_vertices[i].x << ", "
 			  << file_data.parameter_space_vertices[i].y << ", "
 			  << file_data.parameter_space_vertices[i].z << ")\n";
 	  }
-	  for (int i = 0; i < file_data.polygonal_face_elements.size(); ++i)
+	  for (unsigned int i = 0; i < file_data.polygonal_face_elements.size(); ++i)
 	  {
 		  std::cout << "[\n";
-		  for (int y = 0; y < file_data.polygonal_face_elements.size(); ++y)
+		  for (unsigned int y = 0; y < file_data.polygonal_face_elements[i].size(); ++y)
 		  {
 			  glm::vec3 v = file_data.polygonal_face_elements[i][y];
 			  std::string a,b,c;

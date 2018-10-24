@@ -14,3 +14,5 @@ Win32/*
 *.log
 *.idb
 *.exe
+lib/Debug/*
+build/*
